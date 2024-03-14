@@ -17,11 +17,13 @@ Parameters:
       - 'dev'
   BedrockModelId:
     Type: String
-    Default: 'anthropic.claude-instant-v1'
+    Default: 'anthropic.claude-v2'
     Description: 'Model id for Bedrock'
-    AllowedValues:
-      - 'anthropic.claude-instant-v1'
-      - 'anthropic.claude-v2'
+    AllowedPattern: '^anthropic\.claude-.*'
+  BedrockRegion:
+    Type: String
+    Default: 'us-west-2'
+    Description: 'Region for Bedrock'
   KendraEdition:
     Type: String
     Default: 'DEVELOPER_EDITION'
@@ -201,8 +203,6 @@ Resources:
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerEnforced
-      VersioningConfiguration:
-        Status: Enabled
 
   ##Data Source Bucket Policy
   KendraDSBucketPolicy:
@@ -254,7 +254,7 @@ Resources:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/${BedrockModelId}'
+            Resource: !Sub 'arn:aws:bedrock:${BedrockRegion}::foundation-model/${BedrockModelId}'
             Action: 'bedrock:InvokeModel'
           - Effect: Allow
             Resource: !Sub
@@ -271,6 +271,7 @@ Resources:
         Variables:
           KENDRA_INDEX_ID: !GetAtt KendraIndex.Id
           BEDROCK_MODEL_ID: !Ref BedrockModelId
+          BEDROCK_REGION: !Ref BedrockRegion
       FunctionName: !Sub '${SysName}-${Env}-rag-function'
       Handler: index.lambda_handler
       Role: !GetAtt RagFunctionRole.Arn
